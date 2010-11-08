@@ -20,7 +20,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #ifndef Debug_h
 #define Debug_h
 
-#include "SolverTypes.h"
+#include "core/SolverTypes.h"
 #include "PbSolver.h"
 #include "FEnv.h"
 

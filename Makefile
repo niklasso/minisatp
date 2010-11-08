@@ -2,10 +2,11 @@
 ##  Makefile for Standard, Profile, Debug, and Release version of MiniSat
 ##
 
+MINISATDIR = ..
+
 CSRCS     = $(wildcard *.C)
 CHDRS     = $(wildcard *.h)
 COBJS     = $(addsuffix .o, $(basename $(CSRCS))) ADTs/Global.o ADTs/FEnv.o ADTs/File.o
-#COBJS     = PbSolver_convertSort.o PbSolver.o PbSolver_convertAdd.o PbSolver_convertBdd.o PbSolver_convert.o Debug.o Hardware_adders.o Hardware_clausify.o Hardware_sorters.o Main.o MiniSat.o PbParser.o SatELite.o ADTs/Global.o ADTs/FEnv.o ADTs/File.o
 PCOBJS    = $(addsuffix p,  $(COBJS))
 DCOBJS    = $(addsuffix d,  $(COBJS))
 RCOBJS    = $(addsuffix r,  $(COBJS))
@@ -16,7 +17,7 @@ EXEC      = minisat+
 CXX       = g++
 #CXX      = icpc
 CFLAGS    = -Wall -ffloat-store 
-CFLAGS   += -IADTs -include Global.h -include Main.h -D_FILE_OFFSET_BITS=64 
+CFLAGS   += -IADTs -include Global.h -include Main.h -D_FILE_OFFSET_BITS=64 -I$(MINISATDIR)/minisat  -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS -Wno-parentheses
 COPTIMIZE = -O3 #-fomit-frame-pointer # -falign-loops=4 -falign-functions=16 -foptimize-sibling-calls -finline-functions -fcse-follow-jumps -fcse-skip-blocks -frerun-cse-after-loop -frerun-loop-opt -fgcse
 
 
@@ -53,7 +54,7 @@ clean:
 ## Build rule
 %.o %.op %.od %.or %.ox: %.C
 	@echo Compiling: $<
-	@$(CXX) $(CFLAGS) -c -o $@ $<
+	$(CXX) $(CFLAGS) -c -o $@ $<
 
 ## Linking rules (standard/profile/debug/release)
 $(EXEC): $(COBJS)
@@ -85,7 +86,7 @@ $(EXEC)_64-bit_static: $(R64COBJS)
 depend:	depend.mak
 depend.mak:	$(CSRCS) $(CHDRS)
 	@echo Making dependencies...
-	@$(CXX) -MM $(CSRCS) $(CFLAGS) > depend.mak
+	$(CXX) -MM $(CSRCS) $(CFLAGS) > depend.mak
 	@cp depend.mak /tmp/depend.mak.tmp
 	@sed "s/o:/op:/" /tmp/depend.mak.tmp >> depend.mak
 	@sed "s/o:/od:/" /tmp/depend.mak.tmp >> depend.mak

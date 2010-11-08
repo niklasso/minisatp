@@ -328,7 +328,7 @@ macro void xfreeAll(vec<T*>& ptrs) {
 //=================================================================================================
 // Lifted booleans:
 
-
+#if 0
 class lbool {
     int     value;
     explicit lbool(int v) : value(v) { }
@@ -354,7 +354,7 @@ const lbool l_True  = toLbool( 1);
 const lbool l_False = toLbool(-1);
 const lbool l_Undef = toLbool( 0);
 const lbool l_Error = toLbool(1 << (sizeof(int)*8-1));
-
+#endif
 
 //=================================================================================================
 // Relation operators -- extend definitions from '==' and '<'
