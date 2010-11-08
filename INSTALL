@@ -1,0 +1,21 @@
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+MiniSat v1.13+ and SatElite v1.0+ -- (C) Niklas Een, Niklas Sörensson, 2005
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+NOTE! You need GNU make and GCC to compile this software.
+
+To make the 64-bit version, type
+
+    make rx
+
+To make the BigNum version, type
+ 
+    make rs
+
+To use them together (trying the faster 64-bit version first), use the script
+
+    minisat+_script
+
+Precompiled binaries for Linux are included.
+
+// Niklas
