@@ -34,7 +34,7 @@ bool PbSolver::convertPbs(bool first_call)
     if (first_call){
         findIntervals();
         if (!rewriteAlmostClauses()){
-            ok = false;
+            sat_solver.addEmptyClause();
             return false; }
     }
 
@@ -64,7 +64,7 @@ bool PbSolver::convertPbs(bool first_call)
         }else
             assert(false);
 
-        if (!ok) return false;
+        if (!okay()) return false;
     }
 
     constrs.clear();
@@ -72,5 +72,5 @@ bool PbSolver::convertPbs(bool first_call)
 
     clausify(sat_solver, converted_constrs);
 
-    return ok;
+    return okay();
 }

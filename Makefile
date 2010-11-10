@@ -7,6 +7,12 @@ MINISATDIR = ..
 CSRCS     = $(wildcard *.C)
 CHDRS     = $(wildcard *.h)
 COBJS     = $(addsuffix .o, $(basename $(CSRCS))) ADTs/Global.o ADTs/FEnv.o ADTs/File.o
+
+MINIOBJS  = $(MINISATDIR)/minisat/core/Solver.o $(MINISATDIR)/minisat/simp/SimpSolver.o $(MINISATDIR)/minisat/utils/Options.o $(MINISATDIR)/minisat/utils/System.o
+PMINIOBJS = $(addsuffix p,  $(MINIOBJS))
+DMINIOBJS = $(addsuffix d,  $(MINIOBJS))
+RMINIOBJS = $(addsuffix r,  $(MINIOBJS))
+
 PCOBJS    = $(addsuffix p,  $(COBJS))
 DCOBJS    = $(addsuffix d,  $(COBJS))
 RCOBJS    = $(addsuffix r,  $(COBJS))
@@ -54,39 +60,39 @@ clean:
 ## Build rule
 %.o %.op %.od %.or %.ox: %.C
 	@echo Compiling: $<
-	$(CXX) $(CFLAGS) -c -o $@ $<
+	@$(CXX) $(CFLAGS) -c -o $@ $<
 
 ## Linking rules (standard/profile/debug/release)
 $(EXEC): $(COBJS)
 	@echo Linking $(EXEC)
-	@$(CXX) $(COBJS) -lz -lgmp -ggdb -Wall -o $@ 
+	@$(CXX) $(COBJS) $(MINIOBJS) -lz -lgmp -ggdb -Wall -o $@ 
 
 $(EXEC)_profile: $(PCOBJS)
 	@echo Linking $@
-	@$(CXX) $(PCOBJS) -lz -lgmp -ggdb -Wall -pg -o $@
+	@$(CXX) $(PCOBJS) $(PMINIOBJS) -lz -lgmp -ggdb -Wall -pg -o $@
 
 $(EXEC)_debug:	$(DCOBJS)
 	@echo Linking $@
-	@$(CXX) $(DCOBJS) -lz -lgmp -ggdb -Wall -o $@
+	@$(CXX) $(DCOBJS) $(DMINIOBJS) -lz -lgmp -ggdb -Wall -o $@
 
 $(EXEC)_release: $(RCOBJS)
 	@echo Linking $@
-	@$(CXX) $(RCOBJS) -lz -lgmp -Wall -o $@
+	@$(CXX) $(RCOBJS) $(RMINIOBJS) -lz -lgmp -Wall -o $@
 
 $(EXEC)_bignum_static: $(RCOBJS)
 	@echo Linking $@
-	@$(CXX) --static $(RCOBJS) -lz -lgmp -Wall -o $@
+	@$(CXX) --static $(RCOBJS) $(RMINIOBJS) -lz -lgmp -Wall -o $@
 
 $(EXEC)_64-bit_static: $(R64COBJS)
 	@echo Linking $@
-	@$(CXX) --static $(R64COBJS) -lz -Wall -o $@
+	@$(CXX) --static $(R64COBJS) $(RMINIOBJS) -lz -Wall -o $@
 
 
 ## Make dependencies
 depend:	depend.mak
 depend.mak:	$(CSRCS) $(CHDRS)
 	@echo Making dependencies...
-	$(CXX) -MM $(CSRCS) $(CFLAGS) > depend.mak
+	@$(CXX) -MM $(CSRCS) $(CFLAGS) > depend.mak
 	@cp depend.mak /tmp/depend.mak.tmp
 	@sed "s/o:/op:/" /tmp/depend.mak.tmp >> depend.mak
 	@sed "s/o:/od:/" /tmp/depend.mak.tmp >> depend.mak
@@ -94,4 +100,4 @@ depend.mak:	$(CSRCS) $(CHDRS)
 	@sed "s/o:/ox:/" /tmp/depend.mak.tmp >> depend.mak
 	@rm /tmp/depend.mak.tmp
 
-include depend.mak
+-include depend.mak

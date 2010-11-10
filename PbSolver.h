@@ -31,6 +31,7 @@ using Minisat::Lit;
 using Minisat::SimpSolver;
 using Minisat::lbool;
 using Minisat::mkLit;
+using Minisat::lit_Undef;
 
 //=================================================================================================
 // Linear -- a class for storing pseudo-boolean constraints:
@@ -115,6 +116,7 @@ public:
 
     // Public variables:
     //BasicSolverStats& stats;
+    void    printStats();
 
     int     declared_n_vars;            // Number of variables declared in file header (-1 = not specified).
     int     declared_n_constrs;         // Number of constraints declared in file header (-1 = not specified).

@@ -41,7 +41,7 @@ char*    opt_cnf       = NULL;
 int      opt_verbosity = 1;
 bool     opt_try       = false;     // (hidden option -- if set, then "try" to parse, but don't output "s UNKNOWN" if you fail, instead exit with error code 5)
 
-SolverT  opt_solver        = st_MiniSat;
+//SolverT  opt_solver        = st_MiniSat;
 ConvertT opt_convert       = ct_Mixed;
 ConvertT opt_convert_goal  = ct_Undef;
 bool     opt_convert_weak  = true;
@@ -129,9 +129,6 @@ void parseOptions(int argc, char** argv)
         char*   arg = argv[i];
         if (arg[0] == '-'){
             if (oneof(arg,"h,help")) fprintf(stderr, doc, opt_bdd_thres, opt_sort_thres, opt_goal_bias), exit(0);
-
-            else if (oneof(arg, "M,minisat" )) opt_solver = st_MiniSat;
-            else if (oneof(arg, "S,satelite")) opt_solver = st_SatELite;
 
             else if (oneof(arg, "ca,adders" )) opt_convert = ct_Adders;
             else if (oneof(arg, "cs,sorters")) opt_convert = ct_Sorters;
@@ -251,7 +248,7 @@ void outputResult(const PbSolver& S, bool optimum = true)
 static void SIGINT_handler(int signum) {
     reportf("\n");
     reportf("*** INTERRUPTED ***\n");
-    SatELite::deleteTmpFiles();
+    //SatELite::deleteTmpFiles();
     _exit(0); }     // (using 'exit()' rather than '_exit()' sometimes causes the solver to hang (why?))
 
 
@@ -259,19 +256,8 @@ static void SIGTERM_handler(int signum) {
     reportf("\n");
     reportf("*** TERMINATED ***\n");
     outputResult(*pb_solver, false);
-    SatELite::deleteTmpFiles();
+    //SatELite::deleteTmpFiles();
     _exit(pb_solver->best_goalvalue == Int_MAX ? 0 : 10); }
-
-
-void printStats(BasicSolverStats& stats, double cpu_time)
-{
-    reportf("restarts              : %"I64_fmt"\n", stats.starts);
-    reportf("conflicts             : %-12"I64_fmt"   (%.0f /sec)\n", stats.conflicts   , stats.conflicts   /cpu_time);
-    reportf("decisions             : %-12"I64_fmt"   (%.0f /sec)\n", stats.decisions   , stats.decisions   /cpu_time);
-    reportf("propagations          : %-12"I64_fmt"   (%.0f /sec)\n", stats.propagations, stats.propagations/cpu_time);
-    reportf("inspects              : %-12"I64_fmt"   (%.0f /sec)\n", stats.inspects    , stats.inspects    /cpu_time);
-    reportf("CPU time              : %g s\n", cpu_time);
-}
 
 
 PbSolver::solve_Command convert(Command cmd) {
@@ -319,7 +305,7 @@ int main(int argc, char** argv)
 
     if (opt_verbosity >= 1) {
         reportf("_______________________________________________________________________________\n\n");
-        printStats(pb_solver->stats, cpuTime());
+        pb_solver->printStats();
         reportf("_______________________________________________________________________________\n");
     }
 
@@ -346,11 +332,11 @@ void test(void)
     printf("f= %d\n", index(f));
     printf("g= %d\n", index(g));
 
-    Solver          S(true);
+    SimpSolver      S;
     vec<Formula>    fs;
     fs.push(f ^ g);
     clausify(S, fs);
 
-    S.setVerbosity(1);
+    S.verbosity = 1;
     printf(S.solve() ? "SAT\n" : "UNSAT\n");
 }
