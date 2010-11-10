@@ -264,8 +264,10 @@ PbSolver::solve_Command convert(Command cmd) {
     switch (cmd){
     case cmd_Minimize:      return PbSolver::sc_Minimize;
     case cmd_FirstSolution: return PbSolver::sc_FirstSolution;
-    case cmd_AllSolutions:  return PbSolver::sc_AllSolutions;
-    default: assert(false); }
+    default: 
+        assert(cmd == cmd_AllSolutions);
+        return PbSolver::sc_AllSolutions;
+    }
 }
 
 

@@ -156,7 +156,8 @@ uint64 getUInt(File& in)    // Returns 0 at end-of-file.
             byte2 = in.getChar();
             byte3 = in.getChar();
             return ((byte0 & 0x1F) << 24) | (byte1 << 16) | (byte2 << 8) | byte3;
-        case 3:
+        default:
+            assert(((byte0 & 0x60) >> 5) == 3);
             byte0 = in.getChar();
             byte1 = in.getChar();
             byte2 = in.getChar();
