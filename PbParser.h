@@ -26,9 +26,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 //=================================================================================================
 
 
-void parse_PB_file(cchar* filename, PbSolver& solver, bool abort_on_error = true);
-void parse_PB     (cchar* text    , PbSolver& solver, bool abort_on_error = true);
-
+void parse_PB_file(cchar* filename, PbSolver& solver, bool old_format = false, bool abort_on_error = true);
 
 //=================================================================================================
 #endif

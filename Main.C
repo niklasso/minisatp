@@ -53,6 +53,7 @@ Int      opt_goal          = Int_MAX;
 Command  opt_command       = cmd_Minimize;
 bool     opt_branch_pbvars = false;
 int      opt_polarity_sug  = 1;
+bool     opt_old_format    = false;
 
 char*    opt_input  = NULL;
 char*    opt_result = NULL;
@@ -61,7 +62,7 @@ char*    opt_result = NULL;
 
 cchar* doc =
     "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-    "MiniSat+ 1.0, based on MiniSat v1.13  -- (C) Niklas Een, Niklas Sörensson, 2005\n"
+    "MiniSat+ 1.0, based on MiniSat v1.13  -- (C) Niklas Een, Niklas Sorensson, 2005\n"
     "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
     "USAGE: minisat+ <input-file> [<result-file>] [-<option> ...]\n"
     "\n"
@@ -86,6 +87,9 @@ cchar* doc =
     "\n"
     "  -p -pbvars    Restrict decision heuristic of SAT to original PB variables.\n"
     "  -ps{+,-,0}    Polarity suggestion in SAT towards/away from goal (or neutral).\n"
+    "\n"
+    "Input options:\n"
+    "  -of -old-fmt  Use old variant of OPB file format.\n"
     "\n"
     "Output options:\n"
     "  -s -satlive   Turn off SAT competition output.\n"
@@ -157,6 +161,8 @@ void parseOptions(int argc, char** argv)
             else if (oneof(arg, "ps+"       )) opt_polarity_sug = +1;
             else if (oneof(arg, "ps-"       )) opt_polarity_sug = -1;
             else if (oneof(arg, "ps0"       )) opt_polarity_sug =  0;
+
+            else if (oneof(arg, "of,old-fmt" )) opt_old_format = true;
 
             else if (oneof(arg, "s,satlive" )) opt_satlive = false;
             else if (oneof(arg, "a,ansi"    )) opt_ansi    = false;
@@ -297,7 +303,7 @@ int main(int argc, char** argv)
         opt_command = cmd_FirstSolution;
 
     if (opt_verbosity >= 1) reportf("Parsing PB file...\n");
-    parse_PB_file(opt_input, *pb_solver);
+    parse_PB_file(opt_input, *pb_solver, opt_old_format);
     pb_solver->solve(convert(opt_command));
 
     if (pb_solver->goal == NULL && pb_solver->best_goalvalue != Int_MAX)

@@ -153,7 +153,7 @@ static char* parseIdent(B& in, vec<char>& tmp) {   // 'tmp' is cleared, then fil
 
 
 template<class B, class S>
-void parseExpr(B& in, S& solver, vec<Lit>& out_ps, vec<Int>& out_Cs, vec<char>& tmp)
+void parseExpr(B& in, S& solver, vec<Lit>& out_ps, vec<Int>& out_Cs, vec<char>& tmp, bool old_format)
     // NOTE! only uses "getVar()" method of solver; doesn't add anything.
     // 'tmp' is a tempory, passed to avoid frequent memory reallocation.
 {
@@ -163,8 +163,9 @@ void parseExpr(B& in, S& solver, vec<Lit>& out_ps, vec<Int>& out_Cs, vec<char>& 
         if ((*in < '0' || *in > '9') && *in != '+' && *in != '-') break;
         out_Cs.push(parseInt(in));
         skipWhitespace(in);
-        if (*in != '*') throw xstrdup("Missing '*' after coefficient.");
-        ++in;
+        if (old_format){
+            if (*in != '*') throw xstrdup("Missing '*' after coefficient.");
+            ++in; }
         out_ps.push(Lit(solver.getVar(parseIdent(in, tmp))));
         empty = false;
     }
@@ -196,7 +197,7 @@ void parseSize(B& in, S& solver)
 }
 
 template<class B, class S>
-void parseGoal(B& in, S& solver)
+void parseGoal(B& in, S& solver, bool old_format)
 {
     skipWhitespace(in);
     if (!skipText(in, "min:")) return;      // No goal specified. If file is syntactically correct, no characters will have been consumed (expecting integer).
@@ -207,7 +208,7 @@ void parseGoal(B& in, S& solver)
         ++in;
         skipLine(in);
     }else{
-        parseExpr(in, solver, ps, Cs, tmp);
+        parseExpr(in, solver, ps, Cs, tmp, old_format);
         skipWhitespace(in);
         if (!skipText(in, ";")) throw xstrdup("Expecting ';' after goal function.");
     }
@@ -241,13 +242,13 @@ int parseInequality(B& in)
 }
 
 template<class B, class S>
-bool parseConstrs(B& in, S& solver)
+bool parseConstrs(B& in, S& solver, bool old_format)
 {
     vec<Lit> ps; vec<Int> Cs; vec<char> tmp;
     int     ineq;
     Int     rhs;
     while (*in != EOF){
-        parseExpr(in, solver, ps, Cs, tmp);
+        parseExpr(in, solver, ps, Cs, tmp, old_format);
         ineq = parseInequality(in);
         rhs  = parseInt(in);
 
@@ -269,12 +270,12 @@ bool parseConstrs(B& in, S& solver)
 
 
 template<class B, class S>
-static bool parse_PB(B& in, S& solver, bool abort_on_error)
+static bool parse_PB(B& in, S& solver, bool old_format, bool abort_on_error)
 {
     try{
         parseSize(in, solver);
-        parseGoal(in, solver);
-        return parseConstrs(in, solver);
+        parseGoal(in, solver, old_format);
+        return parseConstrs(in, solver, old_format);
     }catch (cchar* msg){
         if (abort_on_error){
             reportf("PARSE ERROR! [line %d] %s\n", in.line, msg);
@@ -291,14 +292,9 @@ static bool parse_PB(B& in, S& solver, bool abort_on_error)
 // PB parser functions: Returns TRUE if successful, FALSE if conflict detected during parsing.
 // If 'abort_on_error' is false, a 'cchar*' error message may be thrown.
 //
-void parse_PB_file(cchar* filename, PbSolver& solver, bool abort_on_error) {
+void parse_PB_file(cchar* filename, PbSolver& solver, bool old_format, bool abort_on_error) {
     FileBuffer buf(filename);
-    parse_PB(buf, solver, abort_on_error); }
-
-void parse_PB(cchar* text, PbSolver& solver, bool abort_on_error) {
-    StringBuffer buf(text);
-    parse_PB(buf, solver, abort_on_error); }
-
+    parse_PB(buf, solver, old_format, abort_on_error); }
 
 //=================================================================================================
 // Debug:
