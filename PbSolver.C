@@ -17,7 +17,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **************************************************************************************************/
 
-#include "utils/System.h"
+#include "minisat/utils/System.h"
 #include "Sort.h"
 #include "Debug.h"
 
@@ -525,7 +525,7 @@ void PbSolver::solve(solve_Command cmd)
 
     if (opt_polarity_sug != 0){
         for (int i = 0; i < goal_Cs.size(); i++)
-            sat_solver.setPolarity(var(goal_ps[i]), ((goal_Cs[i]*opt_polarity_sug > 0 && !sign(goal_ps[i])) || (goal_Cs[i]*opt_polarity_sug < 0 && sign(goal_ps[i]))) ? false : true);
+            sat_solver.setPolarity(var(goal_ps[i]), ((goal_Cs[i]*opt_polarity_sug > 0 && !sign(goal_ps[i])) || (goal_Cs[i]*opt_polarity_sug < 0 && sign(goal_ps[i]))) ? l_False : l_True);
     }
 
     if (opt_convert_goal != ct_Undef)

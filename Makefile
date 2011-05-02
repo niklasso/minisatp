@@ -8,7 +8,9 @@ CSRCS     = $(wildcard *.C)
 CHDRS     = $(wildcard *.h)
 COBJS     = $(addsuffix .o, $(basename $(CSRCS))) ADTs/Global.o ADTs/FEnv.o ADTs/File.o
 
-MINIOBJS  = $(MINISATDIR)/minisat/core/Solver.o $(MINISATDIR)/minisat/simp/SimpSolver.o $(MINISATDIR)/minisat/utils/Options.o $(MINISATDIR)/minisat/utils/System.o
+MOBJDIR   = $(MINISATDIR)/minisat/build/release/minisat
+
+MINIOBJS  = $(MOBJDIR)/core/Solver.o $(MOBJDIR)/simp/SimpSolver.o $(MOBJDIR)/utils/Options.o $(MOBJDIR)/utils/System.o
 PMINIOBJS = $(addsuffix p,  $(MINIOBJS))
 DMINIOBJS = $(addsuffix d,  $(MINIOBJS))
 RMINIOBJS = $(addsuffix r,  $(MINIOBJS))
@@ -60,7 +62,7 @@ clean:
 ## Build rule
 %.o %.op %.od %.or %.ox: %.C
 	@echo Compiling: $<
-	@$(CXX) $(CFLAGS) -c -o $@ $<
+	$(CXX) $(CFLAGS) -c -o $@ $<
 
 ## Linking rules (standard/profile/debug/release)
 $(EXEC): $(COBJS)

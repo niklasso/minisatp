@@ -20,8 +20,8 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #ifndef PbSolver_h
 #define PbSolver_h
 
-#include "mtl/Vec.h"
-#include "simp/SimpSolver.h"
+#include "minisat/mtl/Vec.h"
+#include "minisat/simp/SimpSolver.h"
 
 #include "Map.h"
 #include "StackAlloc.h"
