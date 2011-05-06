@@ -524,8 +524,10 @@ void PbSolver::solve(solve_Command cmd)
     assert(best_goalvalue == Int_MAX);
 
     if (opt_polarity_sug != 0){
-        for (int i = 0; i < goal_Cs.size(); i++)
-            sat_solver.setPolarity(var(goal_ps[i]), ((goal_Cs[i]*opt_polarity_sug > 0 && !sign(goal_ps[i])) || (goal_Cs[i]*opt_polarity_sug < 0 && sign(goal_ps[i]))) ? l_False : l_True);
+        for (int i = 0; i < goal_Cs.size(); i++){
+            bool dir = goal_Cs[i]*opt_polarity_sug > 0 ? !sign(goal_ps[i]) : sign(goal_ps[i]);
+            sat_solver.setPolarity(var(goal_ps[i]), lbool(dir));
+        }
     }
 
     if (opt_convert_goal != ct_Undef)
