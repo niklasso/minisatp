@@ -11,9 +11,9 @@ COBJS     = $(addsuffix .o, $(basename $(CSRCS))) ADTs/Global.o ADTs/FEnv.o ADTs
 MOBJDIR   = $(MINISATDIR)/minisat/build/release/minisat
 
 MINIOBJS  = $(MOBJDIR)/core/Solver.o $(MOBJDIR)/simp/SimpSolver.o $(MOBJDIR)/utils/Options.o $(MOBJDIR)/utils/System.o
-PMINIOBJS = $(addsuffix p,  $(MINIOBJS))
-DMINIOBJS = $(addsuffix d,  $(MINIOBJS))
-RMINIOBJS = $(addsuffix r,  $(MINIOBJS))
+#PMINIOBJS = $(addsuffix p,  $(MINIOBJS))
+#DMINIOBJS = $(addsuffix d,  $(MINIOBJS))
+#RMINIOBJS = $(addsuffix r,  $(MINIOBJS))
 
 PCOBJS    = $(addsuffix p,  $(COBJS))
 DCOBJS    = $(addsuffix d,  $(COBJS))
@@ -71,23 +71,23 @@ $(EXEC): $(COBJS)
 
 $(EXEC)_profile: $(PCOBJS)
 	@echo Linking $@
-	@$(CXX) $(PCOBJS) $(PMINIOBJS) -lz -lgmp -ggdb -Wall -pg -o $@
+	@$(CXX) $(PCOBJS) $(MINIOBJS) -lz -lgmp -ggdb -Wall -pg -o $@
 
 $(EXEC)_debug:	$(DCOBJS)
 	@echo Linking $@
-	@$(CXX) $(DCOBJS) $(DMINIOBJS) -lz -lgmp -ggdb -Wall -o $@
+	@$(CXX) $(DCOBJS) $(MINIOBJS) -lz -lgmp -ggdb -Wall -o $@
 
 $(EXEC)_release: $(RCOBJS)
 	@echo Linking $@
-	@$(CXX) $(RCOBJS) $(RMINIOBJS) -lz -lgmp -Wall -o $@
+	@$(CXX) $(RCOBJS) $(MINIOBJS) -lz -lgmp -Wall -o $@
 
 $(EXEC)_bignum_static: $(RCOBJS)
 	@echo Linking $@
-	@$(CXX) --static $(RCOBJS) $(RMINIOBJS) -lz -lgmp -Wall -o $@
+	@$(CXX) --static $(RCOBJS) $(MINIOBJS) -lz -lgmp -Wall -o $@
 
 $(EXEC)_64-bit_static: $(R64COBJS)
 	@echo Linking $@
-	@$(CXX) --static $(R64COBJS) $(RMINIOBJS) -lz -Wall -o $@
+	@$(CXX) --static $(R64COBJS) $(MINIOBJS) -lz -Wall -o $@
 
 
 ## Make dependencies
