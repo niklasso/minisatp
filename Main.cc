@@ -244,14 +244,14 @@ void outputResult(const PbSolver& S, bool optimum = true)
 }
 
 
-static void SIGINT_handler(int signum) {
+static void SIGINT_handler(int /*signum*/) {
     reportf("\n");
     reportf("*** INTERRUPTED ***\n");
     //SatELite::deleteTmpFiles();
     _exit(0); }     // (using 'exit()' rather than '_exit()' sometimes causes the solver to hang (why?))
 
 
-static void SIGTERM_handler(int signum) {
+static void SIGTERM_handler(int /*signum*/) {
     reportf("\n");
     reportf("*** TERMINATED ***\n");
     outputResult(*pb_solver, false);
