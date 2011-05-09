@@ -41,7 +41,7 @@ char*    opt_cnf       = NULL;
 int      opt_verbosity = 1;
 bool     opt_try       = false;     // (hidden option -- if set, then "try" to parse, but don't output "s UNKNOWN" if you fail, instead exit with error code 5)
 
-//SolverT  opt_solver        = st_MiniSat;
+bool     opt_preprocess    = true;
 ConvertT opt_convert       = ct_Mixed;
 ConvertT opt_convert_goal  = ct_Undef;
 bool     opt_convert_weak  = true;
@@ -66,15 +66,13 @@ cchar* doc =
     "USAGE: minisat+ <input-file> [<result-file>] [-<option> ...]\n"
     "\n"
     "Solver options:\n"
-    "  -M -minisat   Use MiniSat v1.13 as backend (default)\n"
-    "  -S -satelite  Use SatELite v1.0 as backend\n"
-    "\n"
     "  -ca -adders   Convert PB-constrs to clauses through adders.\n"
     "  -cs -sorters  Convert PB-constrs to clauses through sorters.\n"
     "  -cb -bdds     Convert PB-constrs to clauses through bdds.\n"
     "  -cm -mixed    Convert PB-constrs to clauses by a mix of the above. (default)\n"
     "  -ga/gs/gb/gm  Override conversion for goal function (long name: -goal-xxx).\n"
     "  -w -weak-off  Clausify with equivalences instead of implications.\n"
+    "  -no-pre       Don't use MiniSat's CNF-level preprocessing.\n"
     "\n"
     "  -bdd-thres=   Threshold for prefering BDDs in mixed mode.        [def: %g]\n"
     "  -sort-thres=  Threshold for prefering sorters. Tried after BDDs. [def: %g]\n"
@@ -141,6 +139,7 @@ void parseOptions(int argc, char** argv)
             else if (oneof(arg, "gm,goal-mixed"  )) opt_convert_goal = ct_Mixed;
 
             else if (oneof(arg, "w,weak-off"     )) opt_convert_weak = false;
+            else if (oneof(arg, "no-pre"))          opt_preprocess   = false;
 
             //(make nicer later)
             else if (strncmp(arg, "-bdd-thres=" , 11) == 0) opt_bdd_thres  = atof(arg+11);
@@ -279,7 +278,7 @@ int main(int argc, char** argv)
     /*DEBUG*/if (argc > 1 && (strcmp(argv[1], "-debug") == 0 || strcmp(argv[1], "--debug") == 0)){ void test(); test(); exit(0); }
 
     parseOptions(argc, argv);
-    pb_solver = new PbSolver(); // (must be constructed AFTER parsing commandline options -- constructor uses 'opt_solver' to determinte which SAT solver to use)
+    pb_solver = new PbSolver(opt_preprocess);
     signal(SIGINT , SIGINT_handler);
     signal(SIGTERM, SIGTERM_handler);
 

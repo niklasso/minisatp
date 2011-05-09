@@ -37,7 +37,6 @@ extern int      opt_verbosity;
 extern bool     opt_try;
 
 // -- solver options:
-extern SolverT  opt_solver;
 extern ConvertT opt_convert;
 extern ConvertT opt_convert_goal;
 extern bool     opt_convert_weak;

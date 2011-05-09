@@ -99,13 +99,18 @@ protected:
     bool    convertPbs(bool first_call);   // Called from 'solve()' to convert PB constraints to clauses.
 
 public:
-    PbSolver()  : goal(NULL)
+    PbSolver(bool use_preprocessing = false) 
+                : goal(NULL)
                 , propQ_head(0)
                   //, stats(sat_solver.stats_ref())
                 , declared_n_vars(-1)
                 , declared_n_constrs(-1)
                 , best_goalvalue(Int_MAX)
-                {}
+                {
+                    // Turn off preprocessing if wanted.
+                    if (!use_preprocessing) 
+                        sat_solver.eliminate(true); 
+                }
 
     // Helpers (semi-internal):
     //
