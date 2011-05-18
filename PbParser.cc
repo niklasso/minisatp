@@ -282,7 +282,7 @@ static bool parse_PB(B& in, S& solver, bool old_format, bool abort_on_error)
             xfree(msg);
             if (opt_satlive && !opt_try)
                 printf("s UNKNOWN\n");
-            exit(opt_try ? 5 : 0);
+            exit(5);
         }else
             throw msg;
     }
