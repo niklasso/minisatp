@@ -261,7 +261,7 @@ static void SIGTERM_handler(int signum) {
     reportf("*** TERMINATED ***\n");
     outputResult(*pb_solver, false);
     SatELite::deleteTmpFiles();
-    _exit(pb_solver->best_goalvalue == Int_MAX ? 0 : 10); }
+    _exit(0); }
 
 
 void printStats(BasicSolverStats& stats, double cpu_time)
@@ -324,7 +324,7 @@ int main(int argc, char** argv)
         reportf("_______________________________________________________________________________\n");
     }
 
-    exit(pb_solver->best_goalvalue == Int_MAX ? 20 : (pb_solver->goal == NULL || opt_command == cmd_FirstSolution) ? 10 : 30);    // (faster than "return", which will invoke the destructor for 'PbSolver')
+    exit(0);    // (faster than "return", which will invoke the destructor for 'PbSolver')
 }
 
 
