@@ -61,9 +61,9 @@ char*    opt_result = NULL;
 
 cchar* doc =
     "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-    "MiniSat+ 1.0, based on MiniSat v1.13  -- (C) Niklas Een, Niklas Sorensson, 2005\n"
+    "MiniSat+ 1.1, based on MiniSat 2.2.0  -- (C) Niklas Een, Niklas Sorensson, 2012\n"
     "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-    "USAGE: minisat+ <input-file> [<result-file>] [-<option> ...]\n"
+    "USAGE: minisatp <input-file> [<result-file>] [-<option> ...]\n"
     "\n"
     "Solver options:\n"
     "  -ca -adders   Convert PB-constrs to clauses through adders.\n"
