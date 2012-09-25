@@ -1,4 +1,4 @@
-/*****************************************************************************[Hardware_clausify.C]
+/****************************************************************************[Hardware_clausify.cc]
 Copyright (c) 2005-2010, Niklas Een, Niklas Sorensson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -21,11 +21,11 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 struct Clausifier
 {
-    Solver&      s;
-    vec<Lit>     tmp_clause;
+    SimpSolver&  s;
+    Minisat::vec<Lit> tmp_clause;
     vec<Formula> tmp_marked;
 
-    Clausifier(Solver& _s) : s(_s) {}
+    Clausifier(SimpSolver& _s) : s(_s) {}
 
     static /*WARNING*/ CMap<int>      occ;
     static /*WARNING*/ CMap<Var>      vmap;
@@ -104,19 +104,19 @@ Lit Clausifier::polarityClausify(Formula f)
       #else
         if (Const_p(f)){
             Var x = s.newVar();
-            s.addUnit(Lit(x, (f == _0_)));
-            result = Lit(x);
+            s.addClause(mkLit(x, (f == _0_)));
+            result = mkLit(x);
         }else
       #endif
-        result = Lit(index(f),sign(f));
-    }else if (vmapp.at(f) != lit_Undef && !s.varElimed(var(vmapp.at(f)))){
+        result = mkLit(index(f),sign(f));
+    }else if (vmapp.at(f) != lit_Undef && !s.isEliminated(var(vmapp.at(f)))){
         result = vmapp.at(f);
     }else{
 #if 1
-        result = vmapp.at(~f) != lit_Undef && !s.varElimed(var(vmapp.at(~f))) ?
-            Lit(var(vmapp.at(~f))) : Lit(s.newVar(!opt_branch_pbvars));
+        result = vmapp.at(~f) != lit_Undef && !s.isEliminated(var(vmapp.at(~f))) ?
+            mkLit(var(vmapp.at(~f))) : mkLit(s.newVar(l_Undef, !opt_branch_pbvars));
 #else
-        result = Lit(s.newVar(!opt_branch_pbvars));
+        result = mkLit(s.newVar(l_Undef, !opt_branch_pbvars));
 #endif
         if (Bin_p(f)){
             if (op(f) == op_And){
@@ -127,7 +127,7 @@ Lit Clausifier::polarityClausify(Formula f)
                     for (int i = 0; i < conj.size(); i++)
                         clause(~result,polarityClausify(conj[i]));
                 }else{
-                    vec<Lit> ls;
+                    Minisat::vec<Lit> ls;
                     ls.push(result);
                     for (int i = 0; i < conj.size(); i++)
                         ls.push(polarityClausify(~conj[i]));
@@ -213,7 +213,7 @@ Lit Clausifier::polarityClausify(Formula f)
                 }
             }
         }
-        result = Lit(var(result),sign(f));
+        result = mkLit(var(result),sign(f));
         vmapp.set(f,result);
     }
 
@@ -229,11 +229,11 @@ Lit Clausifier::basicClausify(Formula f)
     if (Atom_p(f)){
         assert(!Const_p(f));
         result = index(f);
-    }else if (vmap.at(f) != var_Undef && !s.varElimed(vmap.at(f))){
+    }else if (vmap.at(f) != var_Undef && !s.isEliminated(vmap.at(f))){
         result = vmap.at(f);
     }else{
-        result = s.newVar(!opt_branch_pbvars);
-        Lit p  = Lit(result);
+        result = s.newVar(l_Undef, !opt_branch_pbvars);
+        Lit p  = mkLit(result);
         if (Bin_p(f)){
 
             if (op(f) == op_And){
@@ -305,11 +305,11 @@ Lit Clausifier::basicClausify(Formula f)
 
     assert(result != var_Undef);
 
-    return Lit(result,sign(f));
+    return mkLit(result,sign(f));
 }
 
 
-void clausify(Solver& s, const vec<Formula>& fs, vec<Lit>& out)
+void clausify(SimpSolver& s, const vec<Formula>& fs, Minisat::vec<Lit>& out)
 {
     Clausifier c(s);
 
@@ -325,10 +325,10 @@ void clausify(Solver& s, const vec<Formula>& fs, vec<Lit>& out)
 }
 
 
-void clausify(Solver& s, const vec<Formula>& fs)
+void clausify(SimpSolver& s, const vec<Formula>& fs)
 {
-    vec<Lit>  out;
+    Minisat::vec<Lit>  out;
     clausify(s, fs, out);
     for (int i = 0; i < out.size(); i++)
-        s.addUnit(out[i]);
+        s.addClause(out[i]);
 }

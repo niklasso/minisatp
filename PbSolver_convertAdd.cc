@@ -1,4 +1,4 @@
-/***************************************************************************[PbSolver_convertAdd.C]
+/**************************************************************************[PbSolver_convertAdd.cc]
 Copyright (c) 2005-2010, Niklas Een, Niklas Sorensson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and

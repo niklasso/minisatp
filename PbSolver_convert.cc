@@ -1,4 +1,4 @@
-/******************************************************************************[PbSolver_convert.C]
+/*****************************************************************************[PbSolver_convert.cc]
 Copyright (c) 2005-2010, Niklas Een, Niklas Sorensson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -34,7 +34,7 @@ bool PbSolver::convertPbs(bool first_call)
     if (first_call){
         findIntervals();
         if (!rewriteAlmostClauses()){
-            ok = false;
+            sat_solver.addEmptyClause();
             return false; }
     }
 
@@ -64,13 +64,18 @@ bool PbSolver::convertPbs(bool first_call)
         }else
             assert(false);
 
-        if (!ok) return false;
+        if (!okay()) return false;
     }
+
+    // NOTE: probably still leaks memory (if there are constraints that are NULL'ed elsewhere)
+    for (int i = 0; i < constrs.size(); i++)
+      if (constrs[i] != NULL)
+        constrs[i]->~Linear();
 
     constrs.clear();
     mem.clear();
 
     clausify(sat_solver, converted_constrs);
 
-    return ok;
+    return okay();
 }

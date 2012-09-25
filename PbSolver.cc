@@ -1,4 +1,4 @@
-/**************************************************************************************[PbSolver.C]
+/*************************************************************************************[PbSolver.cc]
 Copyright (c) 2005-2010, Niklas Een, Niklas Sorensson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -17,7 +17,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **************************************************************************************************/
 
-#include "MiniSat.h"
+#include "minisat/utils/System.h"
 #include "Sort.h"
 #include "Debug.h"
 
@@ -97,7 +97,7 @@ bool PbSolver::addConstr(const vec<Lit>& ps, const vec<Int>& Cs, Int rhs, int in
             storePb(norm_ps, norm_Cs, norm_rhs, Int_MAX); //**/reportf("STORED: "), dump(constrs.last()), reportf("\n");
     }
 
-    return ok;
+    return okay();
 }
 
 
@@ -125,7 +125,7 @@ static Int gcd(Int small, Int big) {
 bool PbSolver::normalizePb(vec<Lit>& ps, vec<Int>& Cs, Int& C)
 {
     assert(ps.size() == Cs.size());
-    if (!ok) return false;
+    if (!okay()) return false;
 
     // Remove assigned literals and literals with zero coefficients:
     int new_sz = 0;
@@ -165,11 +165,11 @@ bool PbSolver::normalizePb(vec<Lit>& ps, vec<Int>& Cs, Int& C)
         if (all[i].snd.fst < all[i].snd.snd){
             // Negative polarity will vanish
             C -= all[i].snd.fst;
-            Csps[i] = Pair_new(all[i].snd.snd - all[i].snd.fst, Lit(all[i].fst));
+            Csps[i] = Pair_new(all[i].snd.snd - all[i].snd.fst, mkLit(all[i].fst));
         }else{
             // Positive polarity will vanish
             C -= all[i].snd.snd;
-            Csps[i] = Pair_new(all[i].snd.fst - all[i].snd.snd, ~Lit(all[i].fst));
+            Csps[i] = Pair_new(all[i].snd.fst - all[i].snd.snd, ~mkLit(all[i].fst));
         }
     }
 
@@ -192,7 +192,7 @@ bool PbSolver::normalizePb(vec<Lit>& ps, vec<Int>& Cs, Int& C)
         while (ps.size() > 0 && sum-Cs.last() < C){
             changed = true;
             if (!addUnit(ps.last())){
-                ok = false;
+                sat_solver.addEmptyClause();;
                 return false; }
             sum -= Cs.last();
             C   -= Cs.last();
@@ -203,7 +203,7 @@ bool PbSolver::normalizePb(vec<Lit>& ps, vec<Int>& Cs, Int& C)
         if (C <= 0)
             return false;
         if (sum < C){
-            ok = false;
+            sat_solver.addEmptyClause();
             return false; }
         assert(sum - Cs[ps.size()-1] >= C);
 
@@ -235,7 +235,7 @@ void PbSolver::storePb(const vec<Lit>& ps, const vec<Int>& Cs, Int lo, Int hi)
 {
     assert(ps.size() == Cs.size());
     for (int i = 0; i < ps.size(); i++)
-        n_occurs[index(ps[i])]++;
+        n_occurs[toInt(ps[i])]++;
     constrs.push(new (mem.alloc(sizeof(Linear) + ps.size()*(sizeof(Lit) + sizeof(Int)))) Linear(ps, Cs, lo, hi));
     //**/reportf("STORED: "), dump(constrs.last()), reportf("\n");
 }
@@ -290,7 +290,7 @@ bool PbSolver::propagate(Linear& c)
     //**/dump(c, sat_solver.assigns_ref()); reportf("\n\n");
     if (c.size == 0){
         if (c.lo > 0 || c.hi < 0)
-            ok = false;
+            sat_solver.addEmptyClause();
         return true;
     }else
         return c.lo == Int_MIN && c.hi == Int_MAX;
@@ -309,14 +309,14 @@ void PbSolver::propagate()
         //**/reportf("propagate("); dump(trail[propQ_head]); reportf(")\n");
         Var     x = var(trail[propQ_head++]);
         for (int pol = 0; pol < 2; pol++){
-            vec<int>&   cs = occur[index(Lit(x,pol))];
+            vec<int>&   cs = occur[toInt(mkLit(x,pol))];
             for (int i = 0; i < cs.size(); i++){
                 if (constrs[cs[i]] == NULL) continue;
                 int trail_sz = trail.size();
                 if (propagate(*constrs[cs[i]]))
                     constrs[cs[i]] = NULL;
                 if (opt_verbosity >= 1 && trail.size() > trail_sz) found = true, reportf("p");
-                if (!ok) return;
+                if (!okay()) return;
             }
         }
     }
@@ -343,8 +343,8 @@ void PbSolver::setupOccurs()
     for (int i = 0; i < constrs.size(); i++){
         if (constrs[i] == NULL) continue;
         for (int j = 0; j < constrs[i]->size; j++)
-            assert(occur[index((*constrs[i])[j])].size() < n_occurs[index((*constrs[i])[j])]),
-            occur[index((*constrs[i])[j])].push(i);
+            assert(occur[toInt((*constrs[i])[j])].size() < n_occurs[toInt((*constrs[i])[j])]),
+            occur[toInt((*constrs[i])[j])].push(i);
     }
 }
 
@@ -436,7 +436,7 @@ bool PbSolver::rewriteAlmostClauses()
             ps.clear();
             for (int j = n; j < c.size; j++)
                 ps.push(c[j]);
-            sat_solver.addClause(ps);
+            addClause(ps);
 
             constrs[i] = NULL;      // Remove this clause
 
@@ -448,17 +448,17 @@ bool PbSolver::rewriteAlmostClauses()
             n_splits++;
             Var x = getVar(buf); assert(x == sat_solver.nVars()-1);
             ps.clear();
-            ps.push(Lit(x));
+            ps.push(mkLit(x));
             for (int j = n; j < c.size; j++)
                 ps.push(c[j]);
-            sat_solver.addClause(ps);
-            if (!sat_solver.okay()){
+            addClause(ps);
+            if (!okay()){
                 reportf("\n");
                 return false; }
 
             ps.clear();
             Cs.clear();
-            ps.push(~Lit(x));
+            ps.push(~mkLit(x));
             Cs.push(c.lo);
             for (int j = 0; j < n; j++)
                 ps.push(c[j]),
@@ -484,7 +484,7 @@ bool PbSolver::rewriteAlmostClauses()
 
 
 static
-Int evalGoal(Linear& goal, vec<lbool>& model)
+Int evalGoal(Linear& goal, Minisat::vec<lbool>& model)
 {
     Int sum = 0;
     for (int i = 0; i < goal.size; i++){
@@ -500,31 +500,34 @@ Int evalGoal(Linear& goal, vec<lbool>& model)
 
 void PbSolver::solve(solve_Command cmd)
 {
-    if (!ok) return;
+    if (!okay()) return;
 
     // Convert constraints:
     pb_n_vars = nVars();
     pb_n_constrs = constrs.size();
     if (opt_verbosity >= 1) reportf("Converting %d PB-constraints to clauses...\n", constrs.size());
     propagate();
-    if (!convertPbs(true)){ assert(!ok); return; }
+    if (!convertPbs(true)){ assert(!okay()); return; }
 
     // Freeze goal function variables (for SatELite):
     if (goal != NULL){
         for (int i = 0; i < goal->size; i++)
-            sat_solver.freeze(var((*goal)[i]));
+            sat_solver.setFrozen(var((*goal)[i]), true);
     }
 
     // Solver (optimize):
-    sat_solver.setVerbosity(opt_verbosity);
+    //sat_solver.setVerbosity(opt_verbosity);
+    sat_solver.verbosity = opt_verbosity;
 
     vec<Lit> goal_ps; if (goal != NULL){ for (int i = 0; i < goal->size; i++) goal_ps.push((*goal)[i]); }
     vec<Int> goal_Cs; if (goal != NULL){ for (int i = 0; i < goal->size; i++) goal_Cs.push((*goal)(i)); }
     assert(best_goalvalue == Int_MAX);
 
     if (opt_polarity_sug != 0){
-        for (int i = 0; i < goal_Cs.size(); i++)
-            sat_solver.suggestPolarity(var(goal_ps[i]), ((goal_Cs[i]*opt_polarity_sug > 0 && !sign(goal_ps[i])) || (goal_Cs[i]*opt_polarity_sug < 0 && sign(goal_ps[i]))) ? l_False : l_True);
+        for (int i = 0; i < goal_Cs.size(); i++){
+            bool dir = goal_Cs[i]*opt_polarity_sug > 0 ? !sign(goal_ps[i]) : sign(goal_ps[i]);
+            sat_solver.setPolarity(var(goal_ps[i]), lbool(dir));
+        }
     }
 
     if (opt_convert_goal != ct_Undef)
@@ -537,7 +540,7 @@ void PbSolver::solve(solve_Command cmd)
 
     if (opt_cnf != NULL)
         reportf("Exporting CNF to: \b%s\b\n", opt_cnf),
-        sat_solver.exportCnf(opt_cnf),
+        sat_solver.toDimacs(opt_cnf),
         exit(0);
 
     bool    sat = false;
@@ -545,13 +548,13 @@ void PbSolver::solve(solve_Command cmd)
     while (sat_solver.solve()){
         sat = true;
         if (cmd == sc_AllSolutions){
-            vec<Lit>    ban;
+            Minisat::vec<Lit>    ban;
             n_solutions++;
             reportf("MODEL# %d:", n_solutions);
             for (Var x = 0; x < pb_n_vars; x++){
-                assert(sat_solver.model()[x] != l_Undef);
-                ban.push(Lit(x, sat_solver.model()[x] == l_True));
-                reportf(" %s%s", (sat_solver.model()[x] == l_False)?"-":"", index2name[x]);
+                assert(sat_solver.model[x] != l_Undef);
+                ban.push(mkLit(x, sat_solver.model[x] == l_True));
+                reportf(" %s%s", (sat_solver.model[x] == l_False)?"-":"", index2name[x]);
             }
             reportf("\n");
             sat_solver.addClause(ban);
@@ -559,13 +562,13 @@ void PbSolver::solve(solve_Command cmd)
         }else{
             best_model.clear();
             for (Var x = 0; x < pb_n_vars; x++)
-                assert(sat_solver.model()[x] != l_Undef),
-                best_model.push(sat_solver.model()[x] == l_True);
+                assert(sat_solver.model[x] != l_Undef),
+                best_model.push(sat_solver.model[x] == l_True);
 
             if (goal == NULL)   // ((fix: moved here Oct 4, 2005))
                 break;
 
-            best_goalvalue = evalGoal(*goal, sat_solver.model());
+            best_goalvalue = evalGoal(*goal, sat_solver.model);
             if (cmd == sc_FirstSolution) break;
 
             if (opt_verbosity >= 1){
@@ -594,4 +597,17 @@ void PbSolver::solve(solve_Command cmd)
             xfree(tmp);
         }
     }
+}
+
+void PbSolver::printStats()
+{
+    double cpu_time = Minisat::cpuTime();
+    double mem_used = Minisat::memUsedPeak();
+    printf("restarts              : %"PRIu64"\n", sat_solver.starts);
+    printf("conflicts             : %-12"PRIu64"   (%.0f /sec)\n", sat_solver.conflicts   , sat_solver.conflicts   /cpu_time);
+    printf("decisions             : %-12"PRIu64"   (%4.2f %% random) (%.0f /sec)\n", sat_solver.decisions, (float)sat_solver.rnd_decisions*100 / (float)sat_solver.decisions, sat_solver.decisions   /cpu_time);
+    printf("propagations          : %-12"PRIu64"   (%.0f /sec)\n", sat_solver.propagations, sat_solver.propagations/cpu_time);
+    printf("conflict literals     : %-12"PRIu64"   (%4.2f %% deleted)\n", sat_solver.tot_literals, (sat_solver.max_literals - sat_solver.tot_literals)*100 / (double)sat_solver.max_literals);
+    if (mem_used != 0) printf("Memory used           : %.2f MB\n", mem_used);
+    printf("CPU time              : %g s\n", cpu_time);
 }

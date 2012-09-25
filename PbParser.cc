@@ -1,4 +1,4 @@
-/**************************************************************************************[PbParser.C]
+/*************************************************************************************[PbParser.cc]
 Copyright (c) 2005-2010, Niklas Een, Niklas Sorensson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -166,7 +166,7 @@ void parseExpr(B& in, S& solver, vec<Lit>& out_ps, vec<Int>& out_Cs, vec<char>& 
         if (old_format){
             if (*in != '*') throw xstrdup("Missing '*' after coefficient.");
             ++in; }
-        out_ps.push(Lit(solver.getVar(parseIdent(in, tmp))));
+        out_ps.push(mkLit(solver.getVar(parseIdent(in, tmp))));
         empty = false;
     }
     if (empty) throw xstrdup("Empty expression.");

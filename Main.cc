@@ -1,4 +1,4 @@
-/******************************************************************************************[Main.C]
+/*****************************************************************************************[Main.cc]
 Copyright (c) 2005-2010, Niklas Een, Niklas Sorensson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -27,7 +27,6 @@ Read a DIMACS file and apply the SAT-solver to it.
 #include <cstdarg>
 #include <unistd.h>
 #include <signal.h>
-#include "MiniSat.h"
 #include "PbSolver.h"
 #include "PbParser.h"
 
@@ -42,7 +41,7 @@ char*    opt_cnf       = NULL;
 int      opt_verbosity = 1;
 bool     opt_try       = false;     // (hidden option -- if set, then "try" to parse, but don't output "s UNKNOWN" if you fail, instead exit with error code 5)
 
-SolverT  opt_solver        = st_MiniSat;
+bool     opt_preprocess    = true;
 ConvertT opt_convert       = ct_Mixed;
 ConvertT opt_convert_goal  = ct_Undef;
 bool     opt_convert_weak  = true;
@@ -62,20 +61,18 @@ char*    opt_result = NULL;
 
 cchar* doc =
     "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-    "MiniSat+ 1.0, based on MiniSat v1.13  -- (C) Niklas Een, Niklas Sorensson, 2005\n"
+    "MiniSat+ 1.1, based on MiniSat 2.2.0  -- (C) Niklas Een, Niklas Sorensson, 2012\n"
     "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-    "USAGE: minisat+ <input-file> [<result-file>] [-<option> ...]\n"
+    "USAGE: minisatp <input-file> [<result-file>] [-<option> ...]\n"
     "\n"
     "Solver options:\n"
-    "  -M -minisat   Use MiniSat v1.13 as backend (default)\n"
-    "  -S -satelite  Use SatELite v1.0 as backend\n"
-    "\n"
     "  -ca -adders   Convert PB-constrs to clauses through adders.\n"
     "  -cs -sorters  Convert PB-constrs to clauses through sorters.\n"
     "  -cb -bdds     Convert PB-constrs to clauses through bdds.\n"
     "  -cm -mixed    Convert PB-constrs to clauses by a mix of the above. (default)\n"
     "  -ga/gs/gb/gm  Override conversion for goal function (long name: -goal-xxx).\n"
     "  -w -weak-off  Clausify with equivalences instead of implications.\n"
+    "  -no-pre       Don't use MiniSat's CNF-level preprocessing.\n"
     "\n"
     "  -bdd-thres=   Threshold for prefering BDDs in mixed mode.        [def: %g]\n"
     "  -sort-thres=  Threshold for prefering sorters. Tried after BDDs. [def: %g]\n"
@@ -131,9 +128,6 @@ void parseOptions(int argc, char** argv)
         if (arg[0] == '-'){
             if (oneof(arg,"h,help")) fprintf(stderr, doc, opt_bdd_thres, opt_sort_thres, opt_goal_bias), exit(0);
 
-            else if (oneof(arg, "M,minisat" )) opt_solver = st_MiniSat;
-            else if (oneof(arg, "S,satelite")) opt_solver = st_SatELite;
-
             else if (oneof(arg, "ca,adders" )) opt_convert = ct_Adders;
             else if (oneof(arg, "cs,sorters")) opt_convert = ct_Sorters;
             else if (oneof(arg, "cb,bdds"   )) opt_convert = ct_BDDs;
@@ -145,6 +139,7 @@ void parseOptions(int argc, char** argv)
             else if (oneof(arg, "gm,goal-mixed"  )) opt_convert_goal = ct_Mixed;
 
             else if (oneof(arg, "w,weak-off"     )) opt_convert_weak = false;
+            else if (oneof(arg, "no-pre"))          opt_preprocess   = false;
 
             //(make nicer later)
             else if (strncmp(arg, "-bdd-thres=" , 11) == 0) opt_bdd_thres  = atof(arg+11);
@@ -249,29 +244,19 @@ void outputResult(const PbSolver& S, bool optimum = true)
 }
 
 
-static void SIGINT_handler(int signum) {
+static void SIGINT_handler(int /*signum*/) {
     reportf("\n");
     reportf("*** INTERRUPTED ***\n");
-    SatELite::deleteTmpFiles();
+    //SatELite::deleteTmpFiles();
     _exit(0); }     // (using 'exit()' rather than '_exit()' sometimes causes the solver to hang (why?))
 
 
-static void SIGTERM_handler(int signum) {
+static void SIGTERM_handler(int /*signum*/) {
     reportf("\n");
     reportf("*** TERMINATED ***\n");
     outputResult(*pb_solver, false);
-    SatELite::deleteTmpFiles();
-    _exit(0); }
-
-
-void printStats(BasicSolverStats& stats, double cpu_time)
-{
-    reportf("restarts              : %"I64_fmt"\n", stats.starts);
-    reportf("conflicts             : %-12"I64_fmt"   (%.0f /sec)\n", stats.conflicts   , stats.conflicts   /cpu_time);
-    reportf("decisions             : %-12"I64_fmt"   (%.0f /sec)\n", stats.decisions   , stats.decisions   /cpu_time);
-    reportf("propagations          : %-12"I64_fmt"   (%.0f /sec)\n", stats.propagations, stats.propagations/cpu_time);
-    reportf("inspects              : %-12"I64_fmt"   (%.0f /sec)\n", stats.inspects    , stats.inspects    /cpu_time);
-    reportf("CPU time              : %g s\n", cpu_time);
+    //SatELite::deleteTmpFiles();
+    _exit(0);
 }
 
 
@@ -279,8 +264,10 @@ PbSolver::solve_Command convert(Command cmd) {
     switch (cmd){
     case cmd_Minimize:      return PbSolver::sc_Minimize;
     case cmd_FirstSolution: return PbSolver::sc_FirstSolution;
-    case cmd_AllSolutions:  return PbSolver::sc_AllSolutions;
-    default: assert(false); }
+    default: 
+        assert(cmd == cmd_AllSolutions);
+        return PbSolver::sc_AllSolutions;
+    }
 }
 
 
@@ -292,7 +279,7 @@ int main(int argc, char** argv)
     /*DEBUG*/if (argc > 1 && (strcmp(argv[1], "-debug") == 0 || strcmp(argv[1], "--debug") == 0)){ void test(); test(); exit(0); }
 
     parseOptions(argc, argv);
-    pb_solver = new PbSolver(); // (must be constructed AFTER parsing commandline options -- constructor uses 'opt_solver' to determinte which SAT solver to use)
+    pb_solver = new PbSolver(opt_preprocess);
     signal(SIGINT , SIGINT_handler);
     signal(SIGTERM, SIGTERM_handler);
 
@@ -320,11 +307,11 @@ int main(int argc, char** argv)
 
     if (opt_verbosity >= 1) {
         reportf("_______________________________________________________________________________\n\n");
-        printStats(pb_solver->stats, cpuTime());
+        pb_solver->printStats();
         reportf("_______________________________________________________________________________\n");
     }
 
-    exit(0);    // (faster than "return", which will invoke the destructor for 'PbSolver')
+    exit(0); // (faster than "return", which will invoke the destructor for 'PbSolver')
 }
 
 
@@ -347,11 +334,11 @@ void test(void)
     printf("f= %d\n", index(f));
     printf("g= %d\n", index(g));
 
-    Solver          S(true);
+    SimpSolver      S;
     vec<Formula>    fs;
     fs.push(f ^ g);
     clausify(S, fs);
 
-    S.setVerbosity(1);
+    S.verbosity = 1;
     printf(S.solve() ? "SAT\n" : "UNSAT\n");
 }
