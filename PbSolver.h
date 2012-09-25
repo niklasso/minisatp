@@ -52,6 +52,12 @@ public:
         for (int i = 0; i < ps.size(); i++) *(Lit*)p = ps[i], p += sizeof(Lit);
         for (int i = 0; i < Cs.size(); i++) new ((Int*)p) Int(Cs[i]), p += sizeof(Int); }
 
+    ~Linear()
+    {
+        for (int i = 0; i < size; i++)
+            (*this)(i).~Int();
+    }
+
     Lit operator [] (int i) const { return *(Lit*)(data + sizeof(Lit)*i); }
     Int operator () (int i) const { return *(Int*)(data + sizeof(Lit)*orig_size + sizeof(Int)*i); }
     Lit& operator [] (int i) { return *(Lit*)(data + sizeof(Lit)*i); }

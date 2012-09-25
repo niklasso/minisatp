@@ -67,6 +67,11 @@ bool PbSolver::convertPbs(bool first_call)
         if (!okay()) return false;
     }
 
+    // NOTE: probably still leaks memory (if there are constraints that are NULL'ed elsewhere)
+    for (int i = 0; i < constrs.size(); i++)
+      if (constrs[i] != NULL)
+        constrs[i]->~Linear();
+
     constrs.clear();
     mem.clear();
 
