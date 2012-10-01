@@ -31,6 +31,9 @@ add_definitions(-include Global.h -include Main.h -D_FILE_OFFSET_BITS=64)
 #--------------------------------------------------------------------------------------------------
 # Dependencies:
 
+find_package(GMP REQUIRED)
+include_directories(${GMP_INCLUDE_DIR})
+
 include_directories(${minisat_SOURCE_DIR})
 include_directories(${minisatp_SOURCE_DIR})
 include_directories(${minisatp_SOURCE_DIR}/ADTs)
@@ -57,8 +60,8 @@ set(MINISATP_LIB_SOURCES
 add_library(minisatp-lib-static STATIC ${MINISATP_LIB_SOURCES})
 add_library(minisatp-lib-shared SHARED ${MINISATP_LIB_SOURCES})
 
-target_link_libraries(minisatp-lib-shared minisat-lib-shared -lgmp)
-target_link_libraries(minisatp-lib-static minisat-lib-static -lgmp)
+target_link_libraries(minisatp-lib-shared minisat-lib-shared ${GMP_LIBRARY})
+target_link_libraries(minisatp-lib-static minisat-lib-static ${GMP_LIBRARY})
 
 set_target_properties(minisatp-lib-static PROPERTIES OUTPUT_NAME "minisatp")
 set_target_properties(minisatp-lib-shared 
