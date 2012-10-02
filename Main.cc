@@ -24,7 +24,6 @@ Read a DIMACS file and apply the SAT-solver to it.
 **************************************************************************************************/
 
 
-#include <cstdarg>
 #include <unistd.h>
 #include <signal.h>
 #include "PbSolver.h"

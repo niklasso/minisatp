@@ -28,6 +28,7 @@ Contains types, macros, and inline functions generally useful in a C++ program.
 
 #include <cassert>
 #include <cstdio>
+#include <cstdarg>
 #include <cstdlib>
 #include <cstring>
 #include <climits>
